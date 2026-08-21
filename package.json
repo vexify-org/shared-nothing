@@ -1,0 +1,41 @@
+{
+  "name": "shared-nothing",
+  "version": "1.0.0",
+  "description": "Serialization-free, lock-free shared-memory object graph for Node.js worker threads, written in Rust (N-API). Powered by Vexify · Apache-2.0.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "Apache-2.0",
+  "keywords": [
+    "shared-memory",
+    "worker-threads",
+    "napi",
+    "rust",
+    "lock-free",
+    "SharedArrayBuffer",
+    "concurrency"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build:native": "cargo build --release && cp target/release/libshared_nothing.so npm/linux-x64-gnu/shared-nothing.linux-x64-gnu.node",
+    "build:x32": "cargo build --release --target i686-unknown-linux-gnu && cp target/i686-unknown-linux-gnu/release/libshared_nothing.so npm/linux-x32-gnu/shared-nothing.linux-x32-gnu.node",
+    "test": "node --test tests/integration.mjs tests/worker-stress.mjs",
+    "bench": "node benches/bench.mjs"
+  },
+  "optionalDependencies": {
+    "@shared-nothing/shared-nothing-linux-x64-gnu": "1.0.0",
+    "@shared-nothing/shared-nothing-linux-x32-gnu": "1.0.0",
+    "@shared-nothing/shared-nothing-win32-x64-msvc": "1.0.0",
+    "@shared-nothing/shared-nothing-darwin-x64": "1.0.0"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.4"
+  }
+}
