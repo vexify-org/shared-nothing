@@ -1,0 +1,90 @@
+name: release
+
+# Builds and publishes the per-platform prebuilt sub-packages on real runners:
+#   @shared-nothing/shared-nothing-{linux-x64-gnu,linux-x32-gnu,win32-x64-msvc,darwin-x64}
+# and then the main `shared-nothing` package.
+# Triggered by pushing a tag like v1.0.0. Requires a repo secret NPM_TOKEN
+# with publish rights to both `shared-nothing` and `@shared-nothing`.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  prebuild:
+    name: prebuild (${{ matrix.pack }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            pack: linux-x64-gnu
+            binary: shared-nothing.linux-x64-gnu.node
+            artifact: target/release/libshared_nothing.so
+          - os: ubuntu-latest
+            target: i686-unknown-linux-gnu
+            pack: linux-x32-gnu
+            binary: shared-nothing.linux-x32-gnu.node
+            artifact: target/i686-unknown-linux-gnu/release/libshared_nothing.so
+            cross: true
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            pack: win32-x64-msvc
+            binary: shared-nothing.win32-x64-msvc.node
+            artifact: target/release/shared_nothing.dll
+          - os: macos-13
+            target: x86_64-apple-darwin
+            pack: darwin-x64
+            binary: shared-nothing.darwin-x64.node
+            artifact: target/release/libshared_nothing.dylib
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Build (cross x32)
+        if: matrix.cross
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib
+          cargo build --release --target ${{ matrix.target }}
+      - name: Build (native)
+        if: ${{ !matrix.cross }}
+        run: cargo build --release
+      - name: Place prebuilt binary
+        run: cp "${{ matrix.artifact }}" "npm/${{ matrix.pack }}/${{ matrix.binary }}"
+      - name: Verify binary loads
+        env:
+          NODE_PATH: ${{ env.SHIM }}
+        run: |
+          npm --prefix npm/${{ matrix.pack }} install --ignore-scripts
+          node -e "const b=require('./npm/${{ matrix.pack }}'); const r=b.SharedRegion.create({id:'ci'}); r.root().set('ok',1); if(r.root().get('ok')!==1) process.exit(1); console.log('load ok')"
+      - name: Publish sub-package
+        run: npm publish --access public
+        working-directory: npm/${{ matrix.pack }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-main:
+    name: publish main package
+    needs: prebuild
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

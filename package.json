@@ -17,26 +17,23 @@
   "engines": {
     "node": ">=18"
   },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "napi build --platform --release --zig",
-    "build:native": "cargo build --release",
-    "artifacts": "napi artifacts",
-    "prepare": "napi build --platform --release --zig || true",
+    "build:native": "cargo build --release && cp target/release/libshared_nothing.so npm/linux-x64-gnu/shared-nothing.linux-x64-gnu.node",
+    "build:x32": "cargo build --release --target i686-unknown-linux-gnu && cp target/i686-unknown-linux-gnu/release/libshared_nothing.so npm/linux-x32-gnu/shared-nothing.linux-x32-gnu.node",
     "test": "node --test tests/integration.mjs tests/worker-stress.mjs",
     "bench": "node benches/bench.mjs"
   },
-  "napi": {
-    "name": "shared-nothing",
-    "binaryName": "shared-nothing",
-    "triples": {
-      "defaults": false,
-      "additional": [
-        "x86_64-unknown-linux-gnu",
-        "i686-unknown-linux-gnu",
-        "x86_64-pc-windows-msvc",
-        "x86_64-apple-darwin"
-      ]
-    }
+  "optionalDependencies": {
+    "@shared-nothing/shared-nothing-linux-x64-gnu": "1.0.0",
+    "@shared-nothing/shared-nothing-linux-x32-gnu": "1.0.0",
+    "@shared-nothing/shared-nothing-win32-x64-msvc": "1.0.0",
+    "@shared-nothing/shared-nothing-darwin-x64": "1.0.0"
   },
   "devDependencies": {
     "@napi-rs/cli": "^2.18.4"

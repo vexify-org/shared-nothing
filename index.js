@@ -1,32 +1,41 @@
 "use strict";
 
-// N-API binding loader + thin ergonomic wrappers.
+// Loads the correct per-platform prebuilt binary from an optional dependency
+// like `@shared-nothing/shared-nothing-<platform>-<arch>`, then adds an
+// ergonomic `get()` helper on NodeRef.
 //
-// The native addon already exports the full API surface (SharedRegion and
-// NodeRef classes) and is safe to use directly. A small `get()` helper is added
-// on NodeRef so that reading a nested key transparently returns either a child
-// NodeRef (containers) or a materialized scalar.
+// Platforms currently published: linux-x64-gnu, linux-x32-gnu.
+// Windows (msvc) and macOS (x64) binaries are produced and published by the
+// CI release workflow (see .github/workflows/release.yml).
 
-const { existsSync } = require("node:fs");
-const path = require("node:path");
-
-const candidates = [
-  `shared-nothing.${process.platform}-${process.arch}-gnu.node`,
-  `shared-nothing.${process.platform}-${process.arch}-musl.node`,
-  `shared-nothing.${process.platform}-${process.arch}.node`,
-];
-
-let binding = null;
-for (const name of candidates) {
-  const p = path.join(__dirname, name);
-  if (existsSync(p)) {
-    binding = require(p);
-    break;
+function platformTarget() {
+  const { platform: p, arch: a } = process;
+  if (p === "darwin") return `darwin-${a}`;
+  if (p === "win32") return `win32-${a}-msvc`;
+  if (p === "linux") {
+    // Node reports 32-bit x86 as "ia32"; napi uses "x32".
+    const arch = a === "ia32" ? "x32" : a;
+    let libc = "gnu";
+    try {
+      const header = process.report && process.report.getReport() && process.report.getReport().header;
+      // glibc is set on the report header for glibc systems, absent on musl.
+      if (!(header && header.glibcVersionRuntime)) libc = "musl";
+    } catch {
+      libc = "musl";
+    }
+    return `linux-${arch}-${libc}`;
   }
+  throw new Error(`shared-nothing: unsupported platform ${p}-${a}`);
 }
-if (!binding) {
+
+const target = platformTarget();
+let binding;
+try {
+  binding = require(`@shared-nothing/shared-nothing-${target}`);
+} catch (e) {
   throw new Error(
-    "Native binding not found. Run `npm run build` first (see README).",
+    `shared-nothing: no prebuilt binary for platform target "${target}". ` +
+      `Install the matching optional dependency, or run from source: ${e.message}`,
   );
 }
 
@@ -37,9 +46,5 @@ if (binding.NodeRef && binding.NodeRef.prototype && !binding.NodeRef.prototype.g
     return child || this.get_value(key);
   };
 }
-
-// For the SharedArrayBuffer backend, pass a Buffer view over the SAB:
-//   SharedRegion.wrap(Buffer.from(sab))
-// This keeps the native `wrap` binding (which consumes a Buffer) untouched.
 
 module.exports = binding;

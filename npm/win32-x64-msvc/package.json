@@ -1,0 +1,9 @@
+{
+  "name": "@shared-nothing/shared-nothing-win32-x64-msvc",
+  "version": "1.0.0",
+  "os": ["win32"],
+  "cpu": ["x64"],
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "files": ["index.js", "shared-nothing.win32-x64-msvc.node"]
+}

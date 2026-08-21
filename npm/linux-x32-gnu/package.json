@@ -1,0 +1,10 @@
+{
+  "name": "@shared-nothing/shared-nothing-linux-x32-gnu",
+  "version": "1.0.0",
+  "os": ["linux"],
+  "cpu": ["x32"],
+  "libc": ["glibc"],
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "files": ["index.js", "shared-nothing.linux-x32-gnu.node"]
+}

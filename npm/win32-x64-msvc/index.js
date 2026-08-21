@@ -1,0 +1,1 @@
+module.exports = require("./shared-nothing.win32-x64-msvc.node");
