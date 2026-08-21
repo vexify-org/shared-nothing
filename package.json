@@ -1,7 +1,7 @@
 {
   "name": "shared-nothing",
-  "version": "0.1.0",
-  "description": "Serialization-free shared-memory object graph for Node.js worker threads, written in Rust (N-API). Powered by Vexify · Apache-2.0 · npm · nodejs.",
+  "version": "1.0.0",
+  "description": "Serialization-free, lock-free shared-memory object graph for Node.js worker threads, written in Rust (N-API). Powered by Vexify · Apache-2.0.",
   "main": "index.js",
   "types": "index.d.ts",
   "license": "Apache-2.0",
@@ -18,20 +18,27 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "napi build --platform --release --zig",
+    "build:native": "cargo build --release",
+    "artifacts": "napi artifacts",
+    "prepare": "napi build --platform --release --zig || true",
     "test": "node --test tests/integration.mjs tests/worker-stress.mjs",
     "bench": "node benches/bench.mjs"
   },
   "napi": {
     "name": "shared-nothing",
     "binaryName": "shared-nothing",
-    "triples": {}
+    "triples": {
+      "defaults": false,
+      "additional": [
+        "x86_64-unknown-linux-gnu",
+        "i686-unknown-linux-gnu",
+        "x86_64-pc-windows-msvc",
+        "x86_64-apple-darwin"
+      ]
+    }
   },
-  "files": [
-    "index.js",
-    "index.d.ts",
-    "shared-nothing.*.node",
-    "README.md",
-    "LICENSE"
-  ]
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.4"
+  }
 }

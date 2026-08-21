@@ -1,6 +1,6 @@
 [package]
 name = "shared-nothing"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 description = "Serialization-free shared-memory object graph for Node.js worker threads (Rust/N-API). Powered by Vexify."
 license = "Apache-2.0"
