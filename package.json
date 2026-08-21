@@ -1,0 +1,37 @@
+{
+  "name": "shared-nothing",
+  "version": "0.1.0",
+  "description": "Serialization-free shared-memory object graph for Node.js worker threads, written in Rust (N-API). Powered by Vexify · Apache-2.0 · npm · nodejs.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "Apache-2.0",
+  "keywords": [
+    "shared-memory",
+    "worker-threads",
+    "napi",
+    "rust",
+    "lock-free",
+    "SharedArrayBuffer",
+    "concurrency"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/integration.mjs tests/worker-stress.mjs",
+    "bench": "node benches/bench.mjs"
+  },
+  "napi": {
+    "name": "shared-nothing",
+    "binaryName": "shared-nothing",
+    "triples": {}
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "shared-nothing.*.node",
+    "README.md",
+    "LICENSE"
+  ]
+}

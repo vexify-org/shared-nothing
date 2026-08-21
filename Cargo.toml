@@ -1,0 +1,22 @@
+[package]
+name = "shared-nothing"
+version = "0.1.0"
+edition = "2021"
+description = "Serialization-free shared-memory object graph for Node.js worker threads (Rust/N-API). Powered by Vexify."
+license = "Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2", default-features = false, features = ["napi8", "napi6", "napi5", "napi4", "napi3"] }
+napi-derive = "2"
+libc = "0.2"
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true
+opt-level = 3
+strip = true
